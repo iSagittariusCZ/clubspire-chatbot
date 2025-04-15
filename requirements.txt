@@ -1,2 +1,5 @@
 streamlit
 openai
+tiktoken
+numpy
+scikit-learn
