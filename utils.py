@@ -1,11 +1,8 @@
 import numpy as np
 import tiktoken
-from openai import OpenAI
 from sklearn.metrics.pairwise import cosine_similarity
 
-client = OpenAI()
-
-# Funkce pro rozřezání textu na bloky (např. 500 tokenů)
+# Rozřeže text na bloky (např. 500 tokenů)
 def split_text(text, chunk_size=500, overlap=100):
     encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
@@ -18,8 +15,8 @@ def split_text(text, chunk_size=500, overlap=100):
 
     return chunks
 
-# Funkce pro výpočet podobnosti mezi dotazem a bloky
-def find_relevant_chunks(chunks, question, top_n=1):
+# Najde nejrelevantnější bloky podle dotazu
+def find_relevant_chunks(client, chunks, question, top_n=1):
     embeddings = [client.embeddings.create(input=chunk, model="text-embedding-ada-002").data[0].embedding for chunk in chunks]
     question_emb = client.embeddings.create(input=question, model="text-embedding-ada-002").data[0].embedding
 
