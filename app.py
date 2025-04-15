@@ -1,10 +1,10 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
 st.set_page_config(page_title="Clubspire Chatbot")
 
 # 🔐 OpenAI API key
-openai.api_key = st.secrets["openai_api_key"]
+client = OpenAI(api_key=st.secrets["openai_api_key"])
 
 # 📘 Načti manuál
 @st.cache_data
@@ -32,12 +32,12 @@ Dotaz: {user_input}
 Odpověz česky, výstižně a prakticky.
 """
 
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
             max_tokens=500
         )
 
-        answer = response["choices"][0]["message"]["content"]
+        answer = response.choices[0].message.content
         st.markdown(f"**Chatbot:** {answer}")
