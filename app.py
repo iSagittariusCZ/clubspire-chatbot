@@ -23,7 +23,7 @@ user_input = st.text_input("Tvoje otázka:")
 if user_input:
     with st.spinner("Přemýšlím..."):
         try:
-            relevant_chunks = find_relevant_chunks(client, chunks, user_input, top_n=2)
+            relevant_chunks = find_relevant_chunks(client, chunks, user_input, top_n=2, limit_chunks=5)
             context = "\n\n".join(relevant_chunks)
 
             prompt = f"""
