@@ -1,10 +1,10 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 
 st.set_page_config(page_title="Clubspire Chatbot")
 
 # 🔐 OpenAI API key
-client = OpenAI(api_key=st.secrets["openai_api_key"])
+openai.api_key = st.secrets["openai_api_key"]
 
 # 📘 Načti manuál
 @st.cache_data
@@ -24,22 +24,27 @@ user_input = st.text_input("Tvoje otázka:")
 if user_input:
     with st.spinner("Přemýšlím..."):
         prompt = f"""
-Jsi technický asistent pro software Clubspire. Máš k dispozici následující výňatek z manuálu:
+Jsi technický asistent pro software Clubspire. Níže máš výňatek z uživatelského manuálu:
 
 \"\"\"{manual_text[:3000]}\"\"\"
 
-Na základě uvedeného textu odpověz výhradně podle něj. Pokud odpověď v textu není, napiš: 'V manuálu se tato informace nenachází.'
+Na základě uvedeného textu se snaž odpovědět co nejpřesněji a prakticky na uživatelovu otázku. 
+Pokud odpověď není zcela jasná, upřímně to přiznej, ale buď co nejvíce nápomocný.
 
 Dotaz: {user_input}
-Odpověz česky, prakticky a přesně.
+
+Odpověz česky, výstižně a prakticky.
 """
 
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": "Jsi technický asistent pro software Clubspire."},
+                {"role": "user", "content": prompt}
+            ],
             temperature=0.5,
             max_tokens=500
         )
 
-        answer = response.choices[0].message.content
+        answer = response["choices"][0]["message"]["content"]
         st.markdown(f"**Chatbot:** {answer}")
