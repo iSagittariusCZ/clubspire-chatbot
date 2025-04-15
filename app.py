@@ -3,11 +3,9 @@ from openai import OpenAI
 from utils import split_text, find_relevant_chunks
 
 st.set_page_config(page_title="Clubspire Chatbot")
-
-# 🔐 OpenAI API key
 client = OpenAI(api_key=st.secrets["openai_api_key"])
 
-# 📘 Načti manuál
+# 🗂️ Načti manuál
 @st.cache_data
 def load_manual():
     with open("manual_clubspire.txt", "r", encoding="utf-8") as f:
@@ -15,34 +13,28 @@ def load_manual():
 
 manual_text = load_manual()
 
-# Rozděl text na části
-chunks = split_text(manual_text)
+# Rozdělení na kratší části
+chunks = split_text(manual_text, chunk_size=1000, overlap=200)
 
-# 🎯 Titulek
+# 🧠 Vstup uživatele
 st.title("🤖 Clubspire Chatbot")
-st.write("Zeptej se mě na cokoliv ohledně softwaru Clubspire.")
-
-# 🧠 Uživatelský vstup
 user_input = st.text_input("Tvoje otázka:")
 
 if user_input:
     with st.spinner("Přemýšlím..."):
         try:
-            # Vyhledej nejrelevantnější úryvky z manuálu
             relevant_chunks = find_relevant_chunks(client, chunks, user_input, top_n=2)
-            st.subheader("🔍 Nejrelevantnější výňatky z manuálu:")
-            for i, chunk in enumerate(relevant_chunks):
-                st.code(chunk, language="markdown")
+            context = "\n\n".join(relevant_chunks)
 
             prompt = f"""
-Jsi technický asistent pro software Clubspire. Máš k dispozici následující výňatky z manuálu:
+Jsi technický asistent pro software Clubspire. Níže máš výňatek z manuálu:
 
-\"\"\"{relevant_chunks[0]}\n\n{relevant_chunks[1]}\"\"\"
+\"\"\"{context}\"\"\"
 
-Na základě uvedeného textu odpověz výhradně podle něj. Pokud odpověď v textu není, napiš: 'V manuálu se tato informace nenachází.'
+Na základě uvedeného textu odpověz na dotaz níže co nejpřesněji a prakticky. Pokud odpověď v textu není, napiš: 'V manuálu se tato informace nenachází.'
 
 Dotaz: {user_input}
-Odpověz česky, prakticky a přesně.
+Odpověz česky a konkrétně:
 """
 
             response = client.chat.completions.create(
@@ -53,8 +45,7 @@ Odpověz česky, prakticky a přesně.
             )
 
             answer = response.choices[0].message.content
-            st.subheader("💬 Chatbot:")
-            st.markdown(answer)
+            st.markdown(f"**Chatbot:** {answer}")
 
         except Exception as e:
-            st.error(f"Nastala chyba: {e}")
+            st.error(f"❌ Chyba: {e}")
