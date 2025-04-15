@@ -1,25 +1,28 @@
-import numpy as np
-import tiktoken
 from sklearn.metrics.pairwise import cosine_similarity
+from openai import OpenAI
 
-# Rozřeže text na bloky (např. 500 tokenů)
-def split_text(text, chunk_size=500, overlap=100):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    tokens = encoding.encode(text)
+def split_text(text, chunk_size=1000, overlap=200):
     chunks = []
-
-    for i in range(0, len(tokens), chunk_size - overlap):
-        chunk = tokens[i:i + chunk_size]
-        decoded = encoding.decode(chunk)
-        chunks.append(decoded)
-
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += chunk_size - overlap
     return chunks
 
-# Najde nejrelevantnější bloky podle dotazu
-def find_relevant_chunks(client, chunks, question, top_n=1):
-    embeddings = [client.embeddings.create(input=chunk, model="text-embedding-ada-002").data[0].embedding for chunk in chunks]
-    question_emb = client.embeddings.create(input=question, model="text-embedding-ada-002").data[0].embedding
-
-    sims = cosine_similarity([question_emb], embeddings)[0]
-    top_indices = sims.argsort()[-top_n:][::-1]
+def find_relevant_chunks(client: OpenAI, chunks, question, top_n=1):
+    # Vygeneruj embeddingy pro všechny chunk části
+    chunk_embeddings = [
+        client.embeddings.create(input=chunk, model="text-embedding-ada-002").data[0].embedding
+        for chunk in chunks
+    ]
+    
+    # Vygeneruj embedding pro dotaz
+    question_embedding = client.embeddings.create(input=question, model="text-embedding-ada-002").data[0].embedding
+    
+    # Vypočítej kosinovou podobnost
+    similarities = cosine_similarity([question_embedding], chunk_embeddings)[0]
+    top_indices = similarities.argsort()[-top_n:][::-1]
+    
     return [chunks[i] for i in top_indices]
