@@ -24,12 +24,14 @@ user_input = st.text_input("Tvoje otázka:")
 if user_input:
     with st.spinner("Přemýšlím..."):
         prompt = f"""
-Jsi technický asistent pro Clubspire. Odpovídáš podle tohoto výňatku z manuálu:
+Jsi technický asistent pro software Clubspire. Máš k dispozici následující výňatek z manuálu:
 
-{manual_text[:3000]}
+\"\"\"{manual_text[:3000]}\"\"\"
+
+Na základě uvedeného textu odpověz výhradně podle něj. Pokud odpověď v textu není, napiš: 'V manuálu se tato informace nenachází.'
 
 Dotaz: {user_input}
-Odpověz česky, výstižně a prakticky.
+Odpověz česky, prakticky a přesně.
 """
 
         response = client.chat.completions.create(
